@@ -1,0 +1,179 @@
+---
+description: "ZeroDrift rules for WordPress site migration. Apply to any WP site move, domain change, server migration, or environment clone. Triggers: WordPress migration, migrate WP, WP move, przenieś WordPressa, migracja WordPress."
+version: "1.1.0"
+last_updated: "2026-03-28"
+alwaysApply: false
+globs: ["**/wp-config*", "**/plugins/**", "**/themes/**", "**/migration/**"]
+---
+
+# ZERODRIFT — WordPress Migration
+
+Source site IS destination site. Every table. Every file. Every version.
+
+---
+
+## WP-M1 — Plugin versions exact
+
+```bash
+# Extract from source
+wp plugin list --format=csv --fields=name,version > plugins-source.csv
+
+# Install exact versions on destination
+while IFS=, read name version; do
+  wp plugin install "$name" --version="$version" --activate
+done < plugins-source.csv
+```
+
+Do not update during migration. Migration ≠ upgrade.
+
+---
+
+## WP-M2 — Core version exact
+
+```bash
+wp core download --version=6.4.3  # exact version from source
+# NEVER: wp core download          # installs latest = drift
+```
+
+---
+
+## WP-M3 — Database: full clone + FK validation
+
+```bash
+# Export ALL tables
+wp db export source-full.sql --add-drop-table
+
+# Import
+wp db import source-full.sql
+
+# URL replace — precise, all tables
+wp search-replace 'https://source.com' 'https://dest.com' \
+  --all-tables --precise --report-changed-only
+```
+
+Post-import FK integrity check (F-03):
+```sql
+-- Orphan post_authors (must return 0 rows)
+SELECT ID, post_author FROM wp_posts
+WHERE post_author NOT IN (SELECT ID FROM wp_users)
+AND post_author != 0;
+
+-- Orphan postmeta (must return 0 rows)
+SELECT meta_id, post_id FROM wp_postmeta
+WHERE post_id NOT IN (SELECT ID FROM wp_posts);
+
+-- Orphan term_relationships (must return 0 rows)
+SELECT tr.object_id, tr.term_taxonomy_id
+FROM wp_term_relationships tr
+LEFT JOIN wp_term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+WHERE tt.term_taxonomy_id IS NULL;
+```
+
+Run `references/wp-cli-verify.sh source-domain.com` for automated check.
+
+---
+
+## WP-M4 — Media: rsync --delete, counts verified
+
+```bash
+rsync -avz --delete source:/wp-content/uploads/ dest:/wp-content/uploads/
+
+# Verify
+ssh source "find wp-content/uploads -type f | wc -l"
+ssh dest   "find wp-content/uploads -type f | wc -l"
+# Numbers must match exactly
+```
+
+---
+
+## WP-M5 — wp-config.php: diff constant names
+
+```bash
+# Extract constant names from both configs
+grep "define(" source-wp-config.php | grep -o "'[A-Z_]*'" | sort > constants-source.txt
+grep "define(" dest-wp-config.php   | grep -o "'[A-Z_]*'" | sort > constants-dest.txt
+diff constants-source.txt constants-dest.txt
+# Must show: no differences in constant names
+```
+
+---
+
+## WP-M6 — Theme: rsync --delete, no rewrites
+
+```bash
+rsync -avz --delete source:/wp-content/themes/client/ dest:/wp-content/themes/client/
+# Theme migrates AS IS. No improvements during migration.
+```
+
+---
+
+## WP-M7 — Settings verified post-migration
+
+Verify manually:
+- Site Title, Tagline, Timezone, Date Format
+- Front page assignment, posts per page
+- Permalink structure (identical string)
+- All menus: names, items, order, assigned locations
+- All widgets: areas, settings, order
+
+---
+
+## WP-M8 — Users and roles intact
+
+```bash
+wp user list --format=csv --fields=ID,user_login,roles > users-source.csv
+# On destination:
+wp user list --format=csv --fields=ID,user_login,roles > users-dest.csv
+diff users-source.csv users-dest.csv  # Zero differences
+```
+
+---
+
+## ROLLBACK PROTOCOL (F-04)
+
+Before migration begins:
+```bash
+# Tag the rollback point
+wp db export "backup-$(date +%Y%m%d-%H%M%S)-pre-migration.sql"
+# Retain for minimum 30 days after go-live
+```
+
+Rollback triggers (conditions requiring rollback):
+- Data loss detected (post count mismatch > 0)
+- FK integrity failures not resolvable within 2 hours
+- Critical functionality broken (checkout, login, forms)
+- Client approval withdrawn
+
+Rollback steps (reverse order):
+```bash
+# 1. Put destination in maintenance mode
+wp maintenance-mode activate
+
+# 2. Restore database from pre-migration backup
+wp db import backup-YYYYMMDD-HHMMSS-pre-migration.sql
+
+# 3. Restore files if changed
+rsync -avz --delete backup/wp-content/ /wp-content/
+
+# 4. Restore wp-config.php
+cp backup/wp-config.php ./wp-config.php
+
+# 5. Flush and verify
+wp cache flush && wp cron event run --due-now
+
+# 6. Verify site loads on source domain
+# 7. Document: what failed, what was rolled back, timestamp
+```
+
+---
+
+## Exception Protocol
+
+| Situation | Action |
+|---|---|
+| Plugin version unavailable in WP.org | STOP → find archived version → ask client |
+| Source DB partially corrupted | STOP → restore from backup → document scope |
+| Media file missing on source | STOP → generate missing-files.txt → ask client |
+| Conflicting search-replace results | STOP → show diff → await decision |
+
+Never improvise. Always escalate.

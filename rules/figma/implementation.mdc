@@ -1,0 +1,166 @@
+---
+description: "ZeroDrift rules for Figma-to-code pixel-perfect implementation. Apply when building any UI from Figma. Triggers: Figma, pixel perfect, match the design, z Figmy, takie same kolory, takie same fonty, overlay test, design implementation."
+version: "1.1.0"
+last_updated: "2026-03-28"
+alwaysApply: false
+globs: ["**/*.css", "**/*.scss", "**/*.tsx", "**/*.jsx", "**/figma/**"]
+---
+
+# ZERODRIFT — Figma Implementation
+
+Figma is source. Code is replica. Overlay test is acceptance criterion.
+For advanced effects (blend modes, backdrop-filter): load `references/figma-advanced.md`
+
+---
+
+## DEFINITION OF DONE — Photoshop Overlay Test
+
+```
+1. Open browser at Figma frame width (1920 or 1440)
+2. Full-page screenshot
+3. Export Figma frame at 1x
+4. Photoshop: overlay, Multiply blend, 50% opacity, zoom 100%
+
+PASS: nothing visible — shapes merge, colors match, text aligns
+FAIL: any outline, offset, shift = NOT DONE — fix before marking complete
+```
+
+---
+
+## F1 — Typography: 7 properties, all required
+
+```css
+font-family: 'Inter', sans-serif;  /* exact name — not system-ui */
+font-size: 13px;                   /* NOT 14px */
+font-weight: 500;                  /* numeric — not "medium" */
+line-height: 20px;                 /* px — not 1.5 unless Figma shows 1.5 */
+letter-spacing: -0.02em;           /* sign + decimals */
+text-transform: uppercase;         /* if Figma has it */
+color: #1A1A2E;                    /* exact hex */
+```
+
+If font is paid → purchase license. Never substitute.
+
+---
+
+## F2 — Colors: exact hex, grays are different
+
+```css
+/* #6B7180 ≠ #6B7280. Both intentional. Copy exact. */
+:root {
+  --color-text-primary:   #0A0A0A;
+  --color-text-secondary: #6B7180;
+  --color-text-muted:     #9CA3AF;
+  --color-border:         #E5E7EB;
+  --color-surface:        #F9FAFB;
+}
+```
+
+---
+
+## F3 — Visible layers only
+
+```
+✅ Extract: visible=true, opacity>0, within frame
+❌ Skip:    hidden (eye OFF), opacity=0, outside frame,
+            named "ref"/"guide"/"DO NOT USE", inside hidden parent
+```
+
+---
+
+## F4 — Auto Layout → CSS
+
+```
+direction: horizontal  →  flex-direction: row
+direction: vertical    →  flex-direction: column
+item spacing: N        →  gap: Npx
+padding T/R/B/L        →  padding: Tpx Rpx Bpx Lpx
+align: center          →  align-items: center
+justify: space-between →  justify-content: space-between
+fill container         →  width: 100%
+hug contents           →  width: fit-content
+fixed: 320             →  width: 320px
+min/max                →  min-width / max-width
+wrap: wrap             →  flex-wrap: wrap
+```
+
+Nested Auto Layout = nested flex. Every level. Every property. Nothing skipped.
+
+---
+
+## F5 — Viewport scaling (1920 → actual)
+
+```
+Scale formula: figma_value × (viewport / 1920)
+At 1440px: all values × 0.75
+
+Fluid: clamp(min, vw_value, figma_value)
+  vw_value = (figma_value / 1920) * 100
+
+Example: Figma gap 48px
+  gap: clamp(32px, 2.5vw, 48px);
+
+Breakpoints ONLY from Figma frames — never invent.
+```
+
+---
+
+## F6 — Shadows: exact X/Y/blur/spread/color/opacity
+
+```css
+/* Figma Effects: X:0 Y:4 Blur:24 Spread:0 #000 12% */
+box-shadow: 0px 4px 24px 0px rgba(0, 0, 0, 0.12);
+/* Multiple shadows: Figma order = CSS order */
+```
+
+---
+
+## F7 — Border radius: per corner when mixed
+
+```css
+/* Figma: TL=8 TR=8 BR=0 BL=0 */
+border-radius: 8px 8px 0 0;
+/* NEVER: border-radius: 8px (when corners differ) */
+```
+
+---
+
+## F8 — Advanced effects
+
+Load `references/figma-advanced.md` for:
+- Layer blend modes → `mix-blend-mode`
+- Background blur → `backdrop-filter`
+- Inner shadow → `box-shadow inset`
+- Stroke alignment → inside/center/outside
+- Gradient fills with exact stops
+
+---
+
+## F9 — Component names = Figma layer names
+
+```
+Figma: Button / Primary / Large  →  <ButtonPrimaryLarge />  ✅
+Figma: Card / Product / Compact  →  <BigCard />             ❌
+```
+
+---
+
+## F10 — Variants: complete, none invented
+
+```
+Figma: default | hover | active | disabled | loading
+Code:  default | hover | active | disabled | loading
+
+Missing = VIOLATION. Extra invented = VIOLATION.
+```
+
+---
+
+## Exception Protocol
+
+| Situation | Action |
+|---|---|
+| Figma frame incomplete / placeholder | STOP → ask designer to complete |
+| Two identical components differ by 1px | STOP → report to designer → await decision |
+| Font license unavailable | STOP → ask client to provide or purchase |
+| Figma and brief contradict | STOP → ask which is source of truth |

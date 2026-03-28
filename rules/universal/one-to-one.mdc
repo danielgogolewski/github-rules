@@ -1,0 +1,25 @@
+---
+description: "Universal 1:1 parity rule for code, data, environments, and design. Apply to any task where source must be replicated without drift. Triggers: 1:1, zero drift, ZeroDrift, parity, exact match, identycznie, dokładnie to samo, zero różnic."
+version: "1.1.0"
+last_updated: "2026-03-28"
+alwaysApply: false
+---
+
+# ZERODRIFT — Universal Parity Rule
+
+Source is truth. Destination IS source.
+See `skills/core/SKILL.md` for complete rules.
+
+## Prime Directive
+- Nothing added beyond what was asked
+- Nothing removed that was not explicitly removed
+- Nothing approximated — exact values only
+- Nothing substituted — exact resource or escalate
+
+## Quick Rules
+- Versions: pin exact (`18.3.1` not `^18`)
+- State: replicate as-is (deficits stay deficits)
+- Edits: scope = task only, nothing beyond
+- Commits: one logical change, title = 100% of diff
+
+When unsure: do less, not more. Ask, do not assume.

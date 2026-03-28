@@ -1,0 +1,148 @@
+---
+description: "Content migration parity rules. Every post, page, meta field, taxonomy, SEO data, and publish date migrates exactly. No cleanup, no reformatting, no editorial changes during migration. Apply for WordPress content migration, CMS transfers, headless data migrations. Trigger: 'migrate content', 'move posts', 'content transfer', 'migrate pages'."
+alwaysApply: false
+globs:
+  - "**/migration*"
+  - "**/import*"
+  - "**/export*"
+---
+
+# ZERODRIFT — Content Migration Rules
+
+Content migration is not content editing.
+Every piece of content migrates exactly as it exists in the source.
+Flaws migrate too. Flaws are flagged — never silently fixed.
+
+---
+
+## C1 — Every post migrates — no exceptions
+
+```bash
+# Count on source
+wp post list --post_type=any --post_status=any --format=count
+
+# Count on destination after migration — must match
+wp post list --post_type=any --post_status=any --format=count
+```
+
+"We'll skip drafts" = VIOLATION unless explicit written client approval.
+"We'll skip old posts" = VIOLATION unless explicit written client approval.
+
+---
+
+## C2 — Content migrates exactly — no cleanup
+
+```
+Source:  "Contact us at +48 123 456 789 or visit our <strong>Warsaw office</strong>."
+Dest:    "Contact us at +48 123 456 789 or visit our <strong>Warsaw office</strong>."  ✅
+
+❌ VIOLATIONS:
+  - Removed phone number ("outdated")
+  - Changed bold to italic ("looks better")
+  - Rewrote sentence ("better grammar")
+  - Stripped HTML ("cleaner markup")
+  - Added paragraph break ("more readable")
+```
+
+Source has bad grammar → migrate bad grammar → flag it → fix separately, in a separate task.
+
+---
+
+## C3 — Post metadata: every field, exact
+
+```
+post_status    → identical (draft stays draft, published stays published)
+post_date      → identical — NEVER reset to migration date
+post_modified  → identical
+post_author    → identical (correct user ID mapping)
+post_name      → identical (slug = URL structure)
+post_parent    → identical (page hierarchy preserved)
+menu_order     → identical
+featured_image → present and correct
+_postmeta      → every custom field, every ACF field, every plugin meta
+```
+
+**Publish date is never reset.** Resetting destroys SEO history and editorial record.
+
+---
+
+## C4 — Taxonomies: exact slugs, exact hierarchy
+
+```bash
+wp term list category --format=csv \
+  --fields=term_id,name,slug,parent > terms-source.csv
+
+# After migration:
+wp term list category --format=csv \
+  --fields=term_id,name,slug,parent > terms-dest.csv
+
+diff terms-source.csv terms-dest.csv  # zero differences
+```
+
+Term slugs = URL structure. Slug drift = 404s.
+
+---
+
+## C5 — SEO metadata migrates for every post
+
+```bash
+# Verify Yoast data present after migration
+wp post list --post_status=publish --format=ids | \
+  xargs -I{} wp post meta get {} _yoast_wpseo_title
+
+# Every post must return a value (or intentional empty)
+# "I left SEO blank, they can fill later" = VIOLATION
+```
+
+Fields to verify per post:
+`_yoast_wpseo_title` `_yoast_wpseo_metadesc` `_yoast_wpseo_canonical`
+`_yoast_wpseo_focuskw` `_yoast_wpseo_opengraph-image`
+
+---
+
+## C6 — Zero old domain references after migration
+
+```bash
+# Check post content
+wp post list --post_status=any --format=ids | \
+  xargs -I{} wp post get {} --field=post_content | \
+  grep 'old-domain.com'
+# Must return: nothing
+
+# Check postmeta
+wp db query "SELECT meta_value FROM wp_postmeta
+  WHERE meta_value LIKE '%old-domain.com%'
+  AND meta_key NOT LIKE '\_%edit%'"
+# Must return: nothing
+```
+
+---
+
+## C7 — Redirects: every old URL mapped
+
+```
+Every changed URL → exact new URL
+No URL left redirecting to homepage as fallback
+No 404s from old content URLs
+
+Generate URL inventory before migration:
+wp post list --post_status=publish \
+  --format=csv --fields=ID,post_name,post_type
+```
+
+---
+
+## Content Migration Checklist
+
+- [ ] Post/page count identical to source?
+- [ ] Post statuses preserved? (drafts are drafts)
+- [ ] Publish dates preserved? (not reset to migration date)
+- [ ] All ACF/custom fields present and populated?
+- [ ] All featured images present and assigned?
+- [ ] All taxonomies migrated with slugs intact?
+- [ ] SEO metadata migrated for every post?
+- [ ] Zero old domain references in content?
+- [ ] All internal links resolving on new domain?
+- [ ] Redirect map covers every changed URL?
+
+**Any NO = content migration incomplete.**
