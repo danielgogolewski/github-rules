@@ -1,7 +1,7 @@
 ---
 name: zerodrift-core
-version: "1.1.0"
-last_updated: "2026-03-28"
+version: "1.1.1"
+last_updated: "2026-07-14"
 author: "Hyperdata PSA"
 description: "ALWAYS use this skill when the user invokes zero drift or exact parity in any context — code, data, environments, deployments, files, design, or synchronization. Trigger words (EN): '1:1', 'zero drift', 'ZeroDrift', 'parity', 'exact match', 'rsync --delete', 'pin versions', 'Roman Pizza Rule', 'same as source', 'no extras', 'no less', 'must be identical', 'exact replica', 'same as prod', 'mirror environment', 'pixel perfect', 'match the design', 'as in Figma', 'Figma to code', 'design token'. Trigger words (PL): '1:1', 'identycznie', 'dokładnie to samo', 'zero różnic', 'tak jak jest', 'przenieś bez zmian', 'migracja 1:1', 'z Figmy', 'pixel perfect', 'takie same kolory', 'takie same fonty'. Also trigger when the user says a seed, environment, structure, dataset, or design must reflect a source without deviation. When in doubt: load this skill."
 ---
@@ -10,7 +10,7 @@ description: "ALWAYS use this skill when the user invokes zero drift or exact pa
 
 > The source is truth. Everything else is noise.
 
-→ Full philosophy: see `PHILOSOPHY.md` in the ZeroDrift repository.  
+→ Full philosophy: see `docs/PHILOSOPHY.md` in the ZeroDrift repository.  
 → Advanced Figma effects: see `references/figma-advanced.md`.
 
 ---
@@ -120,7 +120,7 @@ Title = 100% of diff. Diff = 100% of title.
 //                          ^ deficit  ^ zero orders = real edge case
 ```
 
-### R7a — GDPR/RODO: anonymize before seeding (F-08)
+### R7a — GDPR/RODO: anonymize before seeding
 ```
 Before using production data as seed:
 1. Identify all PII fields: name, email, phone, address, IP, ID numbers
@@ -246,7 +246,7 @@ see `references/figma-advanced.md`
 
 ---
 
-## Exception Protocol (F-02)
+## Exception Protocol
 
 When source is unavailable, incomplete, or inconsistent:
 

@@ -59,8 +59,9 @@ zerodrift/
 │   ├── figma/implementation.mdc  # Pixel-perfect Figma → code
 │   ├── wordpress/migration.mdc   # WordPress site migration
 │   └── content/migration.mdc     # Content migration
+├── references/                   # Advanced Figma effects, WP verify script
 ├── checklists/                   # Pre-launch verification
-└── docs/                         # Philosophy, audit, contributing
+└── docs/                         # Philosophy, contributing
 ```
 
 ---
@@ -68,7 +69,7 @@ zerodrift/
 ## Quickstart
 
 ```bash
-git clone https://github.com/zerodrift/zerodrift .zerodrift
+git clone https://github.com/danielgogolewski/github-rules.git .zerodrift
 
 # Pick what you need:
 cp .zerodrift/rules/universal/one-to-one.mdc     .cursor/rules/
@@ -76,6 +77,9 @@ cp .zerodrift/rules/figma/implementation.mdc     .cursor/rules/
 cp .zerodrift/rules/wordpress/migration.mdc      .cursor/rules/
 cp .zerodrift/rules/content/migration.mdc        .cursor/rules/
 ```
+
+Keep the `.zerodrift` clone in your project — rules reference support files
+in `references/` (advanced Figma effects, WP migration verify script).
 
 ---
 

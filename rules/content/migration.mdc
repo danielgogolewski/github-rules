@@ -1,5 +1,7 @@
 ---
 description: "Content migration parity rules. Every post, page, meta field, taxonomy, SEO data, and publish date migrates exactly. No cleanup, no reformatting, no editorial changes during migration. Apply for WordPress content migration, CMS transfers, headless data migrations. Trigger: 'migrate content', 'move posts', 'content transfer', 'migrate pages'."
+version: "1.1.1"
+last_updated: "2026-07-14"
 alwaysApply: false
 globs:
   - "**/migration*"

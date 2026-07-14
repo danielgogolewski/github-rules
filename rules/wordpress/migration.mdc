@@ -1,7 +1,7 @@
 ---
 description: "ZeroDrift rules for WordPress site migration. Apply to any WP site move, domain change, server migration, or environment clone. Triggers: WordPress migration, migrate WP, WP move, przenieś WordPressa, migracja WordPress."
-version: "1.1.0"
-last_updated: "2026-03-28"
+version: "1.1.1"
+last_updated: "2026-07-14"
 alwaysApply: false
 globs: ["**/wp-config*", "**/plugins/**", "**/themes/**", "**/migration/**"]
 ---
@@ -51,7 +51,7 @@ wp search-replace 'https://source.com' 'https://dest.com' \
   --all-tables --precise --report-changed-only
 ```
 
-Post-import FK integrity check (F-03):
+Post-import FK integrity check:
 ```sql
 -- Orphan post_authors (must return 0 rows)
 SELECT ID, post_author FROM wp_posts
@@ -129,7 +129,7 @@ diff users-source.csv users-dest.csv  # Zero differences
 
 ---
 
-## ROLLBACK PROTOCOL (F-04)
+## ROLLBACK PROTOCOL
 
 Before migration begins:
 ```bash
